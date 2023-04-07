@@ -1,5 +1,5 @@
 open class Animal {
     open fun makeSound() {
-        println("...")
+        println("*animal sounds*")
     }
 }

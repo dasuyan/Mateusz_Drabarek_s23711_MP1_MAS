@@ -15,10 +15,13 @@ data class Cat( // a primary constructor
     val breed: String,
     val documents: MutableList<String>, // a multi-value property
     ) : Animal() {
-
+    val age: Int  // a computed/derived property
+        get() {
+            return LocalDate.now().year - dateOfBirth.year
+        }
     init {
         addCat(this)
-        val age: Int = (LocalDate.now().year - dateOfBirth.year).also{ println("$name is $it years old. Their hashCode = ${ hashCode() }") } // a computed/derived property
+        //val age: Int = (LocalDate.now().year - dateOfBirth.year).also{ println("$name is $it years old. Their hashCode = ${ hashCode() }") } // a computed/derived property
     }
 
     companion object {
@@ -30,6 +33,21 @@ data class Cat( // a primary constructor
         private val file = File("cats.json")
 
         const val maxAge = 50 // a class property and a compile-time constant
+
+        fun getMapOfBirthdays2() = extent.groupBy { it.dateOfBirth.month }
+        fun getMapOfBirthdays(): MutableMap<String, MutableList<Cat>> { // groupBy, associate
+            val birthdayCalendar = mutableMapOf<String, MutableList<Cat>>()
+            extent.forEach {
+                val month = it.dateOfBirth.month.toString()
+
+                if (birthdayCalendar.containsKey(month)) {
+                    birthdayCalendar[month]?.add(it)
+                } else {
+                    birthdayCalendar[month] = mutableListOf(it)
+                }
+            }
+            return birthdayCalendar
+        }
 
         fun showCatExtent() { // a class method
             if (extent.isEmpty()) {
@@ -65,10 +83,14 @@ data class Cat( // a primary constructor
         }
 
         fun readExtent() {
-            val loadedJsonString = file.readText()
-            extent = json.decodeFromString(loadedJsonString)
-            println()
-            showCatExtent()
+            try {
+                val loadedJsonString = file.readText()
+                extent = json.decodeFromString(loadedJsonString)
+                println("\nWe're reading this from a JSON file!")
+                showCatExtent()
+            } catch (e: Exception) {
+                println("\nError: ${ e.message }")
+            }
         }
     }
 
@@ -76,8 +98,7 @@ data class Cat( // a primary constructor
         println("$name says: MEOW!")
     }
 
-    fun makeSound(times: Int) { // a method overload
-        print("$name says: ")
+    fun makeSound(times: Int) = print("$name says: ").also {
         repeat(times) {
             print("MEOW! ")
         }
